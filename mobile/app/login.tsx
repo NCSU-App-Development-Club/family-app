@@ -3,10 +3,11 @@
  * Step 1 collects the user's name, step 2 collects the user's email.
  * Uses a single component with internal step state and reuses shared card styles.
  * 
- * Step state is handled by 
+ * Step state is tracked with state
  * @author Zachary Nurkiewicz
  * @file login.tsx
  */
+
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { useThemeColor } from '@/hooks/use-theme-color'
