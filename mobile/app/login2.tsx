@@ -6,23 +6,22 @@ import {useState} from 'react'
 import type { FormEvent, ChangeEvent } from 'react'; 
 import { useRouter } from 'expo-router';
 
-export default function Login() {
-  // get router
+export default function Login2() {
+  //
   const router = useRouter();
-  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const textColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'background')
   // const themeColor = useThemeColor({"White", Black},"White")
   
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value); 
+    setEmail(event.target.value); 
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     //TODO implement logic for handling submission
     console.log('Form submitted with name:', name);
-    // Use router and go to next page
-    router.push('/login2')
+    router.push('/calendar')
   };
 
 
@@ -33,12 +32,12 @@ export default function Login() {
       <ThemedView style={{backgroundColor: backgroundColor}}>
       <ThemedText style={{color: textColor}}>Your info</ThemedText>
       <br></br>
-      <ThemedText style={{color: textColor}}>How should we identify you?</ThemedText>
+      <ThemedText style={{color: textColor}}>How should we contact you?</ThemedText>
       <form onSubmit={handleSubmit}>
         <ThemedText>
-          Name:
+          Email:
         </ThemedText>
-        <input type="text" value={name} onChange={handleChange} />
+        <input type="text" value={email} onChange={handleChange} />
         <button type="submit">Submit</button>
       </form>
       </ThemedView>
