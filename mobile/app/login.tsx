@@ -173,6 +173,8 @@ export default function Login() {
             disabled={!canContinue}
             style={({ pressed }) => [
               styles.button,
+              // if we cant continue, reduce opacity to 0.5. If button is pressed, reduce to 0.9
+              // else, keep opacity the same
               { opacity: !canContinue ? 0.5 : pressed ? 0.9 : 1 },
             ]}
           >
