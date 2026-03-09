@@ -2,12 +2,13 @@
  * Two-step login/onboarding screen.
  * Step 1 collects the user's name, step 2 collects the user's email.
  * Uses a single component with internal step state and reuses shared card styles.
- * 
+ *
  * Step state is tracked with state
  * @author Zachary Nurkiewicz
  * @file login.tsx
  */
 
+import { Button } from '@/components/button'
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { useThemeColor } from '@/hooks/use-theme-color'
@@ -87,7 +88,7 @@ export default function Login() {
    * Handles the logic for our continue buttons
    * step 1 simply updates the state and goes to step 2
    * step 2 gives us a POJO from the information to post to API
-   * @returns 
+   * @returns
    */
   const handleContinue = () => {
     if (step === 1) {
@@ -135,19 +136,31 @@ export default function Login() {
 
   return (
     <ThemedView style={[styles.screen, { backgroundColor: screenBg }]}>
-      {/* Pushes the UI up for mobile keyboard */}
       <KeyboardAvoidingView
-        style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : Platform.OS === 'android'
+              ? 'height'
+              : undefined
+        }
+        keyboardVerticalOffset={
+          Platform.OS === 'ios' ? 0 : Platform.OS === 'android' ? 20 : 0
+        }
       >
         <ThemedView style={[styles.card, { backgroundColor: cardBg }]}>
-          {/* hitSlop defines area for how big button is. Used because button is kinda small*/}
-          <Pressable onPress={handleBack} style={styles.backRow} hitSlop={10}>
-            <ThemedText style={[styles.backText, { color: textColor }]}>
-              {'‹  Back'}
-            </ThemedText>
-          </Pressable>
+          {step === 2 && (
+            <Pressable onPress={handleBack} style={styles.backRow} hitSlop={10}>
+              <ThemedText style={[styles.backText, { color: textColor }]}>
+                {'‹  Redo Name'}
+              </ThemedText>
+            </Pressable>
+          )}
 
+          <ThemedText style={[styles.stepIndicator, { color: textColor }]}>
+            Step {step} of 2
+          </ThemedText>
           <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
             Your Info
           </ThemedText>
@@ -169,18 +182,11 @@ export default function Login() {
             {...inputProps}
           />
 
-          <Pressable
+          <Button
             onPress={handleContinue}
             disabled={!canContinue}
-            style={({ pressed }) => [
-              styles.button,
-              // if we cant continue, reduce opacity to 0.5. If button is pressed, reduce to 0.9
-              // else, keep opacity the same
-              { opacity: !canContinue ? 0.5 : pressed ? 0.9 : 1 },
-            ]}
-          >
-            <ThemedText style={styles.buttonText}>Continue</ThemedText>
-          </Pressable>
+            text="Continue"
+          />
         </ThemedView>
       </KeyboardAvoidingView>
     </ThemedView>
@@ -190,64 +196,65 @@ export default function Login() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  },
+  keyboardView: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: 24,
+    justifyContent: 'flex-start',
   },
   card: {
-    width: '90%',
-    maxWidth: 420,
-    borderRadius: 14,
-    padding: 18,
+    width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
+    borderRadius: 16,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(90, 190, 186, 0.45)',
+    borderColor: 'rgba(90, 190, 186, 0.35)',
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   backRow: {
     alignSelf: 'flex-start',
-    paddingVertical: 6,
+    paddingVertical: 8,
+    marginBottom: 8,
   },
   backText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
+  stepIndicator: {
+    fontSize: 13,
+    fontWeight: '600',
+    opacity: 0.7,
+    marginBottom: 4,
+  },
   sectionTitle: {
-    marginTop: 4,
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: '700',
+    marginTop: 4,
   },
   sectionSubtitle: {
-    marginTop: 6,
-    fontSize: 14,
+    marginTop: 8,
+    fontSize: 16,
     opacity: 0.8,
   },
   label: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontSize: 12,
-    fontWeight: '700',
-    opacity: 0.85,
-  },
-  input: {
-    height: 44,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-  },
-  button: {
-    marginTop: 16,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: '#55CFCB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
+    marginTop: 24,
+    marginBottom: 10,
     fontSize: 14,
     fontWeight: '700',
+    opacity: 0.9,
+  },
+  input: {
+    height: 52,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    fontSize: 16,
   },
 })
