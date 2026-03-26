@@ -37,6 +37,7 @@ export default function Login() {
   const [name, setName] = useState('')
   // tracks the state for the email
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   // get the colors from our theme
   const screenBg = useThemeColor({}, 'background')
@@ -97,11 +98,12 @@ export default function Login() {
       return
     }
 
+
     //TODO post to API once we have it
     const payload = { name: name.trim(), email: email.trim() }
     console.log('Collected info:', payload)
     //TODO update me to push to the proper next page
-    router.push('/calendar')
+    router.push('/')
   }
 
   // Determines the subtitled based on the step
@@ -109,8 +111,9 @@ export default function Login() {
     step === 1 ? 'How should we identify you?' : 'How should we contact you?'
 
   // Determines label/value based on the step
-  const label = step === 1 ? 'Name' : 'Email'
+  const label = step === 1 ? 'Name' : 'Email and Password'
   const value = step === 1 ? name : email
+
   const onChangeText = step === 1 ? setName : setEmail
 
   // Give props to the screen based on what step we are on
@@ -133,6 +136,12 @@ export default function Login() {
       returnKeyType: 'done',
     }
   }
+  const passwordProps = {
+    placeholder: '••••',
+    autoCorrect: false,
+    textContentType: "password",
+    secureTextEntry: true
+  } as const
 
   return (
     <ThemedView style={[styles.screen, { backgroundColor: screenBg }]}>
@@ -181,12 +190,30 @@ export default function Login() {
             ]}
             {...inputProps}
           />
+          <br></br>
+          {(step === 2) && (
+
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholderTextColor={placeholderTextColor}
+              style={[
+                styles.input,
+                { backgroundColor: inputBg, color: inputText, borderColor },
+              ]}
+              {...passwordProps}
+            />)}
+
+
+
 
           <Button
             onPress={handleContinue}
             disabled={!canContinue}
             text="Continue"
           />
+
+
         </ThemedView>
       </KeyboardAvoidingView>
     </ThemedView>
