@@ -20,6 +20,7 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
+  View,
   type TextInputProps,
 } from 'react-native'
 
@@ -98,7 +99,6 @@ export default function Login() {
       return
     }
 
-
     //TODO post to API once we have it
     const payload = { name: name.trim(), email: email.trim() }
     console.log('Collected info:', payload)
@@ -139,8 +139,8 @@ export default function Login() {
   const passwordProps = {
     placeholder: '••••',
     autoCorrect: false,
-    textContentType: "password",
-    secureTextEntry: true
+    textContentType: 'password',
+    secureTextEntry: true,
   } as const
 
   return (
@@ -190,9 +190,8 @@ export default function Login() {
             ]}
             {...inputProps}
           />
-          <br></br>
-          {(step === 2) && (
-
+          <View style={{ height: 12 }} />
+          {step === 2 && (
             <TextInput
               value={password}
               onChangeText={setPassword}
@@ -202,18 +201,14 @@ export default function Login() {
                 { backgroundColor: inputBg, color: inputText, borderColor },
               ]}
               {...passwordProps}
-            />)}
-
-
-
+            />
+          )}
 
           <Button
             onPress={handleContinue}
             disabled={!canContinue}
             text="Continue"
           />
-
-
         </ThemedView>
       </KeyboardAvoidingView>
     </ThemedView>
