@@ -1,13 +1,3 @@
-/**
- * Two-step login/onboarding screen.
- * Step 1 collects the user's name, step 2 collects the user's email.
- * Uses a single component with internal step state and reuses shared card styles.
- *
- * Step state is tracked with state
- * @author Zachary Nurkiewicz
- * @file login.tsx
- */
-
 import { Button } from '@/components/button'
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
@@ -18,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -67,12 +58,9 @@ export default function Login() {
    * step 2 requires a non-empty email that contains '@'
    */
   const canContinue = useMemo(() => {
-    if (step === 1) {
-      return name.trim().length > 0
-    } else {
-      return email.trim().length > 0 && email.includes('@')
-    }
-  }, [email, name, step])
+    if (step === 1) return name.trim().length > 0
+    return email.trim().length > 0 && email.includes('@') && password.length > 3
+  }, [email, name, password, step])
 
   /**
    * Handles the logic for the back button
@@ -101,7 +89,7 @@ export default function Login() {
 
     //TODO post to API once we have it
     const payload = { name: name.trim(), email: email.trim() }
-    console.log('Collected info:', payload)
+    console.log('Collected:', { name, email, password })
     //TODO update me to push to the proper next page
     router.push('/')
   }
@@ -113,7 +101,6 @@ export default function Login() {
   // Determines label/value based on the step
   const label = step === 1 ? 'Name' : 'Email and Password'
   const value = step === 1 ? name : email
-
   const onChangeText = step === 1 ? setName : setEmail
 
   // Give props to the screen based on what step we are on
@@ -147,69 +134,78 @@ export default function Login() {
     <ThemedView style={[styles.screen, { backgroundColor: screenBg }]}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={
-          Platform.OS === 'ios'
-            ? 'padding'
-            : Platform.OS === 'android'
-              ? 'height'
-              : undefined
-        }
-        keyboardVerticalOffset={
-          Platform.OS === 'ios' ? 0 : Platform.OS === 'android' ? 20 : 0
-        }
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
-        <ThemedView style={[styles.card, { backgroundColor: cardBg }]}>
-          {step === 2 && (
-            <Pressable onPress={handleBack} style={styles.backRow} hitSlop={10}>
-              <ThemedText style={[styles.backText, { color: textColor }]}>
-                {'‹  Redo Name'}
-              </ThemedText>
-            </Pressable>
-          )}
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <ThemedView style={[styles.card, { backgroundColor: cardBg }]}>
+            {step === 2 && (
+              <Pressable
+                onPress={handleBack}
+                style={styles.backRow}
+                hitSlop={10}
+              >
+                <ThemedText style={[styles.backText, { color: textColor }]}>
+                  {'‹  Redo Name'}
+                </ThemedText>
+              </Pressable>
+            )}
 
-          <ThemedText style={[styles.stepIndicator, { color: textColor }]}>
-            Step {step} of 2
-          </ThemedText>
-          <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-            Your Info
-          </ThemedText>
-          <ThemedText style={[styles.sectionSubtitle, { color: textColor }]}>
-            {subtitle}
-          </ThemedText>
+            <ThemedText style={[styles.stepIndicator, { color: textColor }]}>
+              Step {step} of 2
+            </ThemedText>
+            <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
+              Your Info
+            </ThemedText>
+            <ThemedText style={[styles.sectionSubtitle, { color: textColor }]}>
+              {subtitle}
+            </ThemedText>
 
-          <ThemedText style={[styles.label, { color: textColor }]}>
-            {label}
-          </ThemedText>
-          <TextInput
-            value={value}
-            onChangeText={onChangeText}
-            placeholderTextColor={placeholderTextColor}
-            style={[
-              styles.input,
-              { backgroundColor: inputBg, color: inputText, borderColor },
-            ]}
-            {...inputProps}
-          />
-          <View style={{ height: 12 }} />
-          {step === 2 && (
+            <ThemedText style={[styles.label, { color: textColor }]}>
+              {label}
+            </ThemedText>
+
             <TextInput
-              value={password}
-              onChangeText={setPassword}
+              value={value}
+              onChangeText={onChangeText}
               placeholderTextColor={placeholderTextColor}
               style={[
                 styles.input,
                 { backgroundColor: inputBg, color: inputText, borderColor },
               ]}
-              {...passwordProps}
+              {...inputProps}
             />
-          )}
 
-          <Button
-            onPress={handleContinue}
-            disabled={!canContinue}
-            text="Continue"
-          />
-        </ThemedView>
+            {step === 2 && (
+              <>
+                <View style={{ height: 12 }} />
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••"
+                  secureTextEntry
+                  placeholderTextColor={placeholderTextColor}
+                  style={[
+                    styles.input,
+                    { backgroundColor: inputBg, color: inputText, borderColor },
+                  ]}
+                />
+              </>
+            )}
+
+            <View style={styles.buttonContainer}>
+              <Button
+                onPress={handleContinue}
+                disabled={!canContinue}
+                text="Continue"
+              />
+            </View>
+          </ThemedView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </ThemedView>
   )
@@ -221,10 +217,12 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 24,
-    justifyContent: 'flex-start',
+    paddingVertical: 40,
   },
   card: {
     width: '100%',
@@ -278,5 +276,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1,
     fontSize: 16,
+  },
+  buttonContainer: {
+    marginTop: 24,
   },
 })
