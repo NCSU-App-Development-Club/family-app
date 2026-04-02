@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "@family-app/backend",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -8,13 +8,16 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
+    "@hono/zod-validator": "^0.7.6",
     "@libsql/client": "^0.17.2",
     "better-auth": "^1.5.6",
     "dotenv": "^17.4.0",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.9"
+    "hono": "^4.12.9",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@family-app/types": "*",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.19.37",
     "drizzle-kit": "^0.31.10",
