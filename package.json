@@ -1,0 +1,17 @@
+{
+  "name": "family-app",
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "workspaces": [
+    "backend",
+    "mobile",
+    "types"
+  ],
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
