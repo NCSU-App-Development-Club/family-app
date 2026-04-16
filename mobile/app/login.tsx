@@ -5,6 +5,7 @@ import { useThemeColor } from '@/hooks/use-theme-color'
 import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
+import { saveAuthToken, getAuthToken } from '@/lib/auth-token-storage'
 import {
   KeyboardAvoidingView,
   Platform,
@@ -89,11 +90,31 @@ export default function Login() {
     }
 
     //TODO post to API once we have it
-    console.log('Collected:', { name, email, password })
-    await authClient.signIn.email({
+    const { data, error } = await authClient.signIn.email({
       email: email.trim(),
       password: password,
     })
+    if (error) {
+      // error logging in to existing account, so try creating a new account
+      const { error } = await authClient.signUp.email({
+        email: email.trim(),
+        name: name.trim(),
+        password: password,
+      })
+      if (error) {
+      } else {
+        const { data, error } = await authClient.signIn.email({
+          email: email.trim(),
+          password: password,
+        })
+        if (!error) {
+          saveAuthToken(data.token)
+        }
+      }
+    } else {
+      // logged in successfully
+      saveAuthToken(data.token)
+    }
     //TODO update me to push to the proper next page
     router.push('/')
   }
