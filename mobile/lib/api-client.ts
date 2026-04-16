@@ -6,11 +6,10 @@ export type ApiClientOptions = {
   body?: any
 }
 
-export async function apiClient<T extends ZodType<any, any, any>>(
+export async function apiClient(
   endpoint: string,
-  responseSchema: T,
   options: ApiClientOptions
-): Promise<z.output<T>> {
+): Promise<any> {
   const response = await fetch(
     `${process.env.EXPO_PUBLIC_API_URL}${endpoint}`,
     {
@@ -33,5 +32,5 @@ export async function apiClient<T extends ZodType<any, any, any>>(
 
   console.log(responseJson)
 
-  return responseSchema.parse(responseJson)
+  return responseJson
 }
