@@ -2,6 +2,7 @@ import { Button } from '@/components/button'
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { useThemeColor } from '@/hooks/use-theme-color'
+import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
 import {
@@ -80,7 +81,7 @@ export default function Login() {
    * step 2 gives us a POJO from the information to post to API
    * @returns
    */
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (step === 1) {
       setName((n) => n.trim())
       setStep(2)
@@ -88,8 +89,11 @@ export default function Login() {
     }
 
     //TODO post to API once we have it
-    const payload = { name: name.trim(), email: email.trim() }
     console.log('Collected:', { name, email, password })
+    await authClient.signIn.email({
+      email: email.trim(),
+      password: password,
+    })
     //TODO update me to push to the proper next page
     router.push('/')
   }
