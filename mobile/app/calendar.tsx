@@ -1,69 +1,144 @@
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { Colors } from '@/constants/theme'
-import { useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native'
+import { z } from 'zod'
+import {
+  CalendarEventItemSchema,
+  CreateCalendarEventResponseSchema,
+  ListCalendarEventsResponseSchema,
+  UpdateCalendarEventResponseSchema,
+} from '@family-app/types'
 
 /** Force this screen to always use light palette (ignore system dark mode). */
 const L = Colors.light
 
-export type CalendarEventItem = {
-  id: string
-  time: string
-  title: string
-  /** Where the event happens (optional). */
-  location: string
-}
+type CalendarEventItem = z.infer<typeof CalendarEventItemSchema>
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL
+// TODO make calendar work with groups.
+// Temporary placeholder
+const GROUP_ID = 1
 
 export default function CalendarScreen() {
-  const [events, setEvents] = useState<CalendarEventItem[]>([
-    { id: '1', time: '4:30', title: 'Soccer', location: 'Field A' },
-    { id: '2', time: '6:00', title: 'Dinner', location: 'Home' },
-  ])
-  const [time, setTime] = useState('')
-  const [title, setTitle] = useState('')
-  const [location, setLocation] = useState('')
-  /** When set, the form updates this event instead of creating a new one */
+  // Even though server API uses a map, we use an array here because it converts easily to JSON
+  const [events, setEvents] = useState<CalendarEventItem[]>([])
+  const [newTime, setNewTime] = useState('')
+  const [newTitle, setNewTitle] = useState('')
+  const [newLocation, setNewLocation] = useState('')
+  const [editTime, setEditTime] = useState('')
+  const [editTitle, setEditTitle] = useState('')
+  const [editLocation, setEditLocation] = useState('')
+  /** When set, edit form is visible and targets this event. */
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  const resetForm = () => {
-    setTime('')
-    setTitle('')
-    setLocation('')
+  const eventsUrl = `${API_URL}/api/groups/${GROUP_ID}/calendar/events`
+
+  // Initial data load
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const res = await fetch(eventsUrl)
+      const data = ListCalendarEventsResponseSchema.parse(await res.json())
+      setEvents(data.events)
+    }
+
+    fetchEvents()
+  }, [eventsUrl])
+
+  const resetCreateForm = () => {
+    setNewTime('')
+    setNewTitle('')
+    setNewLocation('')
+  }
+
+  const resetEditForm = () => {
+    setEditTime('')
+    setEditTitle('')
+    setEditLocation('')
     setEditingId(null)
   }
 
-  const handleSave = () => {
-    const t = time.trim()
-    const n = title.trim()
-    const loc = location.trim()
+  const handleCreate = async (
+    time: string,
+    title: string,
+    location: string
+  ) => {
+    const res = await fetch(eventsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ time, title, location }),
+    })
+    const created = CreateCalendarEventResponseSchema.parse(await res.json())
+    setEvents((prev) => [...prev, created])
+  }
+
+  const handleUpdate = async (
+    id: string,
+    time: string,
+    title: string,
+    location: string
+  ) => {
+    const res = await fetch(eventsUrl, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        time,
+        title,
+        location,
+      }),
+    })
+    const updated = UpdateCalendarEventResponseSchema.parse(await res.json())
+    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
+  }
+
+  const handleCreateSubmit = async () => {
+    const t = newTime.trim()
+    if (!t.includes(":") || t.length) {
+
+    }
+    const n = newTitle.trim()
+    const loc = newLocation.trim()
     if (!t || !n) return
 
-    if (editingId) {
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === editingId ? { ...e, time: t, title: n, location: loc } : e
-        )
-      )
-    } else {
-      setEvents((prev) => [
-        ...prev,
-        { id: `${Date.now()}`, time: t, title: n, location: loc },
-      ])
-    }
-    resetForm()
+    await handleCreate(t, n, loc)
+    resetCreateForm()
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editingId) return
+
+    const t = editTime.trim()
+    const n = editTitle.trim()
+    const loc = editLocation.trim()
+    if (!t || !n) return
+
+    await handleUpdate(editingId, t, n, loc)
+    resetEditForm()
   }
 
   const handleEdit = (e: CalendarEventItem) => {
     setEditingId(e.id)
-    setTime(e.time)
-    setTitle(e.title)
-    setLocation(e.location)
+    setEditTime(e.time)
+    setEditTitle(e.title)
+    setEditLocation(e.location)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    await fetch(eventsUrl, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
     setEvents((prev) => prev.filter((e) => e.id !== id))
-    if (editingId === id) resetForm()
+    if (editingId === id) resetEditForm()
   }
 
   return (
@@ -76,48 +151,96 @@ export default function CalendarScreen() {
         Calendar
       </ThemedText>
 
-      <ThemedText style={styles.sectionLabel} lightColor={L.text} darkColor={L.text}>
-        New / edit event
+      <ThemedText
+        style={styles.sectionLabel}
+        lightColor={L.text}
+        darkColor={L.text}
+      >
+        Add event
       </ThemedText>
 
       <TextInput
         placeholder="Time (e.g. 4:30)"
         placeholderTextColor={L.icon}
-        value={time}
-        onChangeText={setTime}
+        value={newTime}
+        onChangeText={setNewTime}
         style={styles.input}
       />
       <TextInput
         placeholder="Title"
         placeholderTextColor={L.icon}
-        value={title}
-        onChangeText={setTitle}
+        value={newTitle}
+        onChangeText={setNewTitle}
         style={styles.input}
       />
       <TextInput
         placeholder="Location (optional)"
         placeholderTextColor={L.icon}
-        value={location}
-        onChangeText={setLocation}
+        value={newLocation}
+        onChangeText={setNewLocation}
         style={styles.input}
       />
 
       <View style={styles.buttonRow}>
-        <Pressable onPress={handleSave} style={styles.formButton}>
+        <Pressable onPress={handleCreateSubmit} style={styles.formButton}>
           <ThemedText lightColor={L.text} darkColor={L.text}>
-            {editingId ? 'Save changes' : 'Add event'}
+            Add event
           </ThemedText>
         </Pressable>
-        {editingId ? (
-          <Pressable onPress={resetForm} style={styles.formButton}>
-            <ThemedText lightColor={L.text} darkColor={L.text}>
-              Cancel edit
-            </ThemedText>
-          </Pressable>
-        ) : null}
       </View>
 
-      <ThemedText style={styles.eventsTitle} lightColor={L.text} darkColor={L.text}>
+      {editingId ? (
+        <>
+          <ThemedText
+            style={styles.sectionLabel}
+            lightColor={L.text}
+            darkColor={L.text}
+          >
+            Edit event
+          </ThemedText>
+
+          <TextInput
+            placeholder="Time (e.g. 4:30)"
+            placeholderTextColor={L.icon}
+            value={editTime}
+            onChangeText={setEditTime}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Title"
+            placeholderTextColor={L.icon}
+            value={editTitle}
+            onChangeText={setEditTitle}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Location (optional)"
+            placeholderTextColor={L.icon}
+            value={editLocation}
+            onChangeText={setEditLocation}
+            style={styles.input}
+          />
+
+          <View style={styles.buttonRow}>
+            <Pressable onPress={handleEditSubmit} style={styles.formButton}>
+              <ThemedText lightColor={L.text} darkColor={L.text}>
+                Save changes
+              </ThemedText>
+            </Pressable>
+            <Pressable onPress={resetEditForm} style={styles.formButton}>
+              <ThemedText lightColor={L.text} darkColor={L.text}>
+                Cancel edit
+              </ThemedText>
+            </Pressable>
+          </View>
+        </>
+      ) : null}
+
+      <ThemedText
+        style={styles.eventsTitle}
+        lightColor={L.text}
+        darkColor={L.text}
+      >
         Events
       </ThemedText>
       <ScrollView style={styles.scroll}>
@@ -143,13 +266,19 @@ export default function CalendarScreen() {
                 ) : null}
               </View>
 
-              <Pressable onPress={() => handleEdit(e)} style={styles.rowActionBtn}>
+              <Pressable
+                onPress={() => handleEdit(e)}
+                style={styles.rowActionBtn}
+              >
                 <ThemedText lightColor={L.text} darkColor={L.text}>
                   Edit
                 </ThemedText>
               </Pressable>
 
-              <Pressable onPress={() => handleDelete(e.id)} style={styles.rowActionBtn}>
+              <Pressable
+                onPress={() => handleDelete(e.id)}
+                style={styles.rowActionBtn}
+              >
                 <ThemedText lightColor={L.text} darkColor={L.text}>
                   Delete
                 </ThemedText>
