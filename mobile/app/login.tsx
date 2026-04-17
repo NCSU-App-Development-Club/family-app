@@ -175,7 +175,11 @@ export default function Login() {
               placeholderTextColor={placeholderTextColor}
               style={[
                 styles.input,
-                { backgroundColor: inputBg, color: inputText, borderColor },
+                {
+                  backgroundColor: inputBg,
+                  color: inputText,
+                  borderColor,
+                },
               ]}
               {...inputProps}
             />
@@ -191,7 +195,11 @@ export default function Login() {
                   placeholderTextColor={placeholderTextColor}
                   style={[
                     styles.input,
-                    { backgroundColor: inputBg, color: inputText, borderColor },
+                    {
+                      backgroundColor: inputBg,
+                      color: inputText,
+                      borderColor,
+                    },
                   ]}
                 />
               </>
